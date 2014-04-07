@@ -1,0 +1,25 @@
+{
+  "name": "HumblePlayer",
+  "main": "index.html",
+  "description": "HumbleBundle music player",
+  "version": "0.1.0",
+  "keywords": [
+    "humblebundle",
+    "music",
+    "player"
+  ],
+  "window": {
+    "title": "HumblePlayer",
+    "toolbar": true,
+    "frame": true,
+    "width": 800,
+    "height": 600,
+    "position": "mouse",
+    "min_width": 300,
+    "min_height": 200
+  },
+  "dependencies": {
+    "request": "^2.34.0",
+    "request-progress": "^0.3.1"
+  }
+}
