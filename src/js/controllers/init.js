@@ -32,13 +32,13 @@ module.exports = function HomeController($scope, $location) {
                 console.log('need captcha!');
                 $scope.hasError = true;
                 $scope.errorText = 'Looks like you have to enter captcha! Sorry, HumblePlayer does not support this yet.<br/>Please, login using browser and wait a bit until captcha request disappears!';
-                // redraw
-                $scope.$apply();
-                return;
+            } else {
+                // redirect to login page
+                $location.path('/login');
             }
 
-            // redirect to login page
-            $location.path('/login');
+            // apply changes
+            $scope.$apply();
         });
     };
     $scope.checkCaptcha = checkCaptcha;

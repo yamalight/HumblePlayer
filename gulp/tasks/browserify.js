@@ -10,5 +10,5 @@ module.exports = function() {
         }))
         .pipe(header('nodeRequire = require; '))
         .pipe(rename('app.min.js'))
-        .pipe(gulp.dest('./app/js/'));
+        .pipe(gulp.dest('./app/dist/'));
 };

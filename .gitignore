@@ -3,3 +3,6 @@ node_modules/
 bower_components/
 app/fonts/
 app/js/app.min.js
+app/albums/
+app/extractedAlbums/
+app/dist/

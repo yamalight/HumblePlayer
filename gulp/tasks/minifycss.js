@@ -10,5 +10,5 @@ module.exports = function() {
     ])
     .pipe(minifyCSS())
     .pipe(concat('main.min.css'))
-    .pipe(gulp.dest('./app/css/'));
+    .pipe(gulp.dest('./app/dist/'));
 };
