@@ -1,4 +1,3 @@
-var Spinner = require('spin.js');
 // settings
 var opts = {
     lines: 13, // The number of lines to draw

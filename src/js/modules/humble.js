@@ -1,131 +1,137 @@
-var fs = nodeRequire('fs');
+// package deps
 var request = nodeRequire('request');
-var progress = nodeRequire('request-progress');
-// use cookies
-customRequest = request.defaults({jar: true});
+// bundler
+var bundler = require('./bundler');
+// donwloader
+var downloader = require('./downloader');
+// filesystem stuff
+var filesystem = require('./filesystem');
+// db
+var db = require('./db');
+// util
+var fillRequestWithCookies = require('./util').fillRequestWithCookies;
 // URLs
 var loginURL = 'https://www.humblebundle.com/login';
-var musicURL = 'https://www.humblebundle.com/home';
-
+var homeURL = 'https://www.humblebundle.com/home';
 // cookies container
 var cookies = null;
+// custom request
+var customRequest = request.defaults({jar: true});
 
-// add cookies to request
-var fillRequestWithCookies = function(cookies) {
-    var j = request.jar();
-    var i, len = cookies.length;
+// login method
+var login = function(login, pass, cb) {
+    return new Promise(function (resolve, reject) {
+        var data = {
+            'goto': '/home',
+            'qs': '',
+            'username': login,
+            'password': pass,
+            'authy-token': '',
+            'submit-data': ''
+        };
 
-    // fill container with cookies
-    for(i = 0; i < len; i++) {
-        j.setCookie(request.cookie(cookies[i]), 'http://www.humblebundle.com');
-    }
+        customRequest.post(loginURL, {form: data},
+        function(error, response, body) {
+            if (error || !response || response.statusCode !== 302) {
+                console.log('error!', error, response.statusCode); // Print the error
+                return reject(error);
+            }
 
-    // replace default request with new one with cookies
-    customRequest = request.defaults({jar: j, followAllRedirects: true});
-};
+            // check success
+            var redirectLocation = response.headers.location;
+            if(redirectLocation === 'https://www.humblebundle.com/login?goto=%2Fhome&err=unamepwd') {
+                return reject(new Error('Wrong username or password!'));
+            } else if(redirectLocation !== 'https://www.humblebundle.com/home') {
+                return reject(new Error('Error logging in! Try again?'));
+            }
 
-// process body function
-var processBody = function(body, cookies, cb) {
-    // get jquery from window and use it on body
-    var $ = window.$;
-    var music = [];
-    var audio = $('.downloads.audio', body);
-    audio.each(function(index, item){
-        var collection = {};
-        var game = $(item).siblings('.gameinfo').children('.title').text().trim();
-        var linkTag = $(item).siblings('.icn').children('a.afulllink');
-        var gameLink = linkTag.attr('href');
-        var gameImage = linkTag.children('img').attr('src');
-        var downloads = $(item).children('.download.small');
-        // only process stuff with music
-        if(downloads.length === 0) {
-            return;
-        }
-        collection.game = game;
-        collection.gameURL = gameLink;
-        collection.gameImage = gameImage;
-        collection.files = [];
-        downloads.each(function(i, dl) {
-            dl = $(dl);
-            var a = dl.children('.flexbtn.active.noicon').children('a.a');
-            var link = a.attr('href');
-            var text = a.text().trim();
-            var size = dl.children('.dldetails').children('.dlsize').children('.mbs').text().trim();
-            collection.files.push({
-                link: link,
-                text: text,
-                size: size
+            // store cookies
+            cookies = response.headers['set-cookie'];
+
+            // if no cookies - reject
+            if(!cookies || !cookies.length) {
+                return reject(new Error('No cookies!'));
+            }
+
+            // remove all old cookies
+            db.user.remove({}, function(err) {
+                if(err) {
+                    return reject(new Error('Error cleaning cookies from db!'));
+                }
+                // save new cookies to db
+                db.user.insert({cookies: cookies}, function(err, doc) {
+                    if(err) {
+                        return reject(new Error('Error saving cookies to db!'));
+                    }
+                    // resolve
+                    resolve();
+                });
             });
         });
-        music.push(collection);
-    });
-
-    // trigger callback with data
-    cb({cookies: cookies, music: music});
-};
-
-// export
-var login = function(login, pass, cb) {
-    var data = {
-        'goto': '/home',
-        'qs': '',
-        'username': login,
-        'password': pass,
-        'authy-token': '',
-        'submit-data': ''
-    };
-
-    customRequest.post(loginURL, {form: data}, function (error, response, body) {
-        if (error || response.statusCode !== 302) {
-            cb(false);
-            return console.log('error!', error, response.statusCode); // Print the error
-        }
-
-        // store cookies
-        cookies = response.headers['set-cookie'];
-        // get music
-        getMusic(cookies, cb);
     });
 };
 
-var getMusic = function(cookies, cb) {
-    // add cookies to request
-    fillRequestWithCookies(cookies);
-    // get music
-    customRequest(musicURL, function(error, response, body) {
-        if (error || response.statusCode !== 200) {
-            cb(false);
-            return console.log('error!', error, response.statusCode); // Print the error
-        }
+// check if cookies are saved and valid
+var checkAuth = function () {
+    return new Promise(function (resolve, reject) {
+        db.user.find({}, function (err, docs) {
+            if(err) {
+                return reject(err);
+            }
 
-        processBody(body, cookies, cb);
+            if(!docs || !docs.length) {
+                return resolve(false);
+            }
+
+            var savedCookies = docs[0].cookies;
+            if(!savedCookies) {
+                return resolve(false);
+            }
+
+            // create request with cookies
+            var req = fillRequestWithCookies(savedCookies);
+            // get user owned bundles
+            req(homeURL,
+            function(error, response, body) {
+                if (error || !response || response.statusCode !== 200) {
+                    console.log('error!', error, response.statusCode); // Print the error
+                    return reject(error);
+                }
+
+                if(body.indexOf('Sign In') !== -1) {
+                    return resolve(false);
+                }
+
+                // restore cookies
+                cookies = savedCookies;
+
+                return resolve(cookies);
+            });
+        });
     });
 };
 
-var downloadMusic = function(link, name, progresscb, cb) {
-    var archive = './albums/' + name.replace(/[.\/:*?"<>|]/, "") + '.zip';
-    // if already dled, return
-    if (fs.existsSync(archive)) {
-        cb(archive);
-    }
-    // start download
-    progress(request(link))
-    .on('progress', function (state) {
-        progresscb(state.percent);
-    })
-    .pipe(fs.createWriteStream(archive))
-    .on('error', function(err){
-        console.log('download error', err);
-        cb(false);
-    })
-    .on('close', function(){
-        cb(archive);
-    })
-    .on('end', function(){
-        cb(archive);
-    });
+// get music
+var getMusic = function () {
+    return bundler.getMusic(cookies);
 };
 
-exports.login = login;
-exports.getMusic = getMusic;
-exports.downloadMusic = downloadMusic;
+// download album
+var downloadMusic = function(soundtrack, progresscb, cb) {
+    return downloader.downloadMusic(cookies, soundtrack, progresscb, cb);
+};
+
+// get album files
+var getFilesListing = function (soundtrack, cb) {
+    return filesystem.getFilesListing(soundtrack.name, cb);
+};
+
+var HumbleAPI = function () {
+    this.login = login;
+    this.checkAuth = checkAuth;
+    this.getMusic = getMusic;
+    this.downloadMusic = downloadMusic;
+    this.getFilesListing = getFilesListing;
+};
+
+module.exports = new HumbleAPI();

@@ -1,6 +1,4 @@
 body {
-    padding-top: 40px;
-    padding-bottom: 40px;
     background-color: #eee;
 }
 .init-spinner {
@@ -11,12 +9,9 @@ body {
     padding-top: 15px;
 }
 
-
-
-
-
-
-
+.topMarged {
+    margin-top: 40px;
+}
 
 .form-signin {
     max-width: 330px;
@@ -75,4 +70,9 @@ body {
 }
 .gameName {
     font-size: 120%;
+}
+
+.ladda-button .ladda-spinner {
+    margin-top: 0px !important;
+    margin-left: 0px !important;
 }

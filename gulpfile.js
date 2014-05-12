@@ -5,9 +5,10 @@ var gulp = require('./gulp')([
     'watch',
     'minifycss',
     'jshint',
+    'inject',
 ]);
 
 gulp.task('init', ['bower', 'bootstrap']);
-gulp.task('build', ['browserify', 'minifycss']);
+gulp.task('build', ['inject', 'browserify', 'minifycss']);
 gulp.task('test', ['jshint']);
 gulp.task('default', ['build', 'watch']);

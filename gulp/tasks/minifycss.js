@@ -5,8 +5,9 @@ var minifyCSS = require('gulp-minify-css');
 module.exports = function() {
     gulp.src([
         './src/css/*.css',
-        './bower_components/bootstrap/dist/css/bootstrap.css',
-        './bower_components/bootstrap/dist/css/bootstrap-theme.css',
+        './app/libs/bootstrap/dist/css/bootstrap.css',
+        './app/libs/bootstrap/dist/css/bootstrap-theme.css',
+        './app/libs/ladda/dist/ladda-themeless.min.css',
     ])
     .pipe(minifyCSS())
     .pipe(concat('main.min.css'))

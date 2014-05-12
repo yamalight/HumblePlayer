@@ -1,6 +1,6 @@
 builds/
 node_modules/
-bower_components/
+app/libs/
 app/fonts/
 app/js/app.min.js
 app/albums/

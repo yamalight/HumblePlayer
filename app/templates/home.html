@@ -1,1 +1,37 @@
-Home
+<div class="page-header">
+    <h1>HumblePlayer</h1>
+</div>
+
+<!-- loading msg -->
+<div class="alert alert-info" ng-show="!soundtracks.length"><strong>Please wait!</strong> Loading your library...</div>
+
+<!-- albums -->
+<div class="row" ng-repeat="soundtrack in soundtracks">
+    <!-- album info -->
+    <div class="row album">
+        <div class="col-sm-2 vcenter">
+            <a ng-href="{{soundtrack.url}}"><img ng-src="{{soundtrack.icon}}" /></a>
+        </div>
+        <div class="col-sm-6 vcenter gameName">
+            {{soundtrack.name}}
+        </div>
+        <div class="col-sm-3 vcenter">
+            <a class="btn btn-default expandbutton" data-toggle="tooltip" ng-if="soundtrack.local" ng-click="toggleSoundtrack(soundtrack, $event)">
+                <span class="glyphicon" ng-class="{'glyphicon-plus': !soundtrack.showSongs, 'glyphicon-minus': soundtrack.showSongs}"></span>
+            </a>
+            <a class="btn btn-default ladda-button" data-style="contract" ng-if="!soundtrack.local" ng-click="downloadSoundtrack(soundtrack, $event)">
+                <span class="glyphicon glyphicon-download-alt"></span> {{soundtrack.size}}
+            </a>
+        </div>
+    </div>
+    <div class="row album-tracks" ng-show="soundtrack.showSongs">
+        <div class="row track" ng-repeat="track in soundtrack.songs">
+            <div class="col-sm-offset-2 col-sm-10 vcenter">
+                <a class="btn btn-default btn-sm song-button" ng-click="playNewSong(soundtrack, track)">
+                    <span class="glyphicon glyphicon-play"></span>
+                </a>
+                {{track.name}}
+            </div>
+        </div>
+    </div>
+</div>
