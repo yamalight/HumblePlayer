@@ -1,4 +1,4 @@
-var humble = require('../../module/hubmle');
+var humble = require('../modules/humble');
 
 module.exports = function LoginController($scope) {
     console.log('login!');
