@@ -4,10 +4,12 @@ var fs = nodeRequire('fs');
 var path = nodeRequire('path');
 
 // current player
-var sound, playing, currentSong, currentSoundtrack;
+var sound, currentSong, currentSoundtrack;
 
 module.exports = function HomeController($scope) {
     $scope.soundtracks = [];
+    $scope.playing = false;
+    $scope.currentSongTitle = 'Noting is playing...';
 
     var onSongEnd = function() {
         currentSoundtrack.songs.forEach(function(item, index) {
@@ -71,14 +73,7 @@ module.exports = function HomeController($scope) {
     $scope.playNewSong = function(soundtrack, song) {
         // just play/pause if same song
         if(currentSong && song.path === currentSong.path && soundtrack.url === currentSoundtrack.url) {
-            if(playing) {
-                sound.pause();
-                currentSong.playing = playing = false;
-            } else {
-                sound.play();
-                currentSong.playing = playing = true;
-            }
-            return;
+            return $scope.playPause();
         };
         // destroy current player
         if(sound) {
@@ -89,12 +84,28 @@ module.exports = function HomeController($scope) {
         // save new
         currentSong = song;
         currentSoundtrack = soundtrack;
-        currentSong.playing = playing = true;
+        currentSong.playing = $scope.playing = true;
+        $scope.currentSongTitle = currentSoundtrack.name + ' - ' + song.name;
         // play
         sound = new Howl({
             urls: [song.path],
             onend: onSongEnd
         }).play();
+    };
+
+    $scope.playPause = function() {
+        // only work if plaer inited
+        if(!sound) {
+            return;
+        }
+
+        if($scope.playing) {
+            sound.pause();
+            currentSong.playing = $scope.playing = false;
+        } else {
+            sound.play();
+            currentSong.playing = $scope.playing = true;
+        }
     };
 
     // on init, get music

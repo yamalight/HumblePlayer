@@ -76,3 +76,15 @@ body {
     margin-top: 0px !important;
     margin-left: 0px !important;
 }
+
+.play-btn {
+    margin-right: 10px !important;
+}
+
+.player-head {
+    padding-top: 20px;
+}
+
+.player-nav {
+    padding-top: 10px;
+}
