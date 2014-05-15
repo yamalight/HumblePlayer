@@ -1,6 +1,7 @@
 // humble api
 var humble = require('../modules/humble');
 var fs = nodeRequire('fs');
+var path = nodeRequire('path');
 
 // current player
 var sound, playing, currentSong, currentSoundtrack;
@@ -50,10 +51,11 @@ module.exports = function HomeController($scope) {
             var songList = [];
             // render
             files.forEach(function(item) {
-                var match = /.+\/(.+?)\.mp3/.exec(item);
+                var re = new RegExp('.+\\' + path.sep + '(.+?)\\.mp3');
+                var match = re.exec(item);
                 if(match !== null) {
                     var obj = {
-                        path: 'file://' + encodeURI(item),
+                        path: 'file://' + encodeURI(item.replace( new RegExp('\\'+path.sep, 'g'), '/')),
                         name: match[1],
                         playing: false,
                     };
