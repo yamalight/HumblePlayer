@@ -3,7 +3,7 @@ var humble = require('../modules/humble');
 var fs = nodeRequire('fs');
 
 // current player
-var sound, currentSong, currentSoundtrack;
+var sound, playing, currentSong, currentSoundtrack;
 
 module.exports = function HomeController($scope) {
     $scope.soundtracks = [];
@@ -67,6 +67,17 @@ module.exports = function HomeController($scope) {
     };
 
     $scope.playNewSong = function(soundtrack, song) {
+        // just play/pause if same song
+        if(currentSong && song.path === currentSong.path && soundtrack.url === currentSoundtrack.url) {
+            if(playing) {
+                sound.pause();
+                currentSong.playing = playing = false;
+            } else {
+                sound.play();
+                currentSong.playing = playing = true;
+            }
+            return;
+        };
         // destroy current player
         if(sound) {
             currentSong.playing = false;
@@ -76,7 +87,7 @@ module.exports = function HomeController($scope) {
         // save new
         currentSong = song;
         currentSoundtrack = soundtrack;
-        console.log(song.path);
+        currentSong.playing = playing = true;
         // play
         sound = new Howl({
             urls: [song.path],
