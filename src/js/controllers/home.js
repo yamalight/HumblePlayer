@@ -39,6 +39,10 @@ module.exports = function HomeController($scope) {
             function onResult(data){
                 // stop animation
                 laddaBtn.stop();
+                // reload list
+                $scope.$apply(function() {
+                    soundtrack.local = true;
+                });
             }
         );
     };
@@ -109,28 +113,32 @@ module.exports = function HomeController($scope) {
     };
 
     // on init, get music
-    humble.getMusic()
-    .then(function(soundtracks) {
-        soundtracks = soundtracks.sort(function(item1, item2) {
-            if (item1.local) {
-                return -1;
-            }
-            if (item2.local) {
-                return 1;
-            }
-            if (item1.name < item2.name) {
-                return -1;
-            }
-            if (item1.name > item2.name) {
-                return 1;
-            }
-            return 0;
+    var reloadMusic = function() {
+        humble.getMusic()
+        .then(function(soundtracks) {
+            soundtracks = soundtracks.sort(function(item1, item2) {
+                if (item1.local) {
+                    return -1;
+                }
+                if (item2.local) {
+                    return 1;
+                }
+                if (item1.name < item2.name) {
+                    return -1;
+                }
+                if (item1.name > item2.name) {
+                    return 1;
+                }
+                return 0;
+            });
+            $scope.$apply(function () {
+                $scope.soundtracks = soundtracks;
+            });
+        })
+        .catch(function(err) {
+            console.log('error:', err);
         });
-        $scope.$apply(function () {
-            $scope.soundtracks = soundtracks;
-        });
-    })
-    .catch(function(err) {
-        console.log('error:', err);
-    });
+    };
+
+    reloadMusic();
 };
